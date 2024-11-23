@@ -1,3 +1,16 @@
+-- Dossier où sauvegarder les fichiers reçus
+local saveFolder = "Téléchargements"
+
+-- Création du dossier si nécessaire
+if not fs.exists(saveFolder) then
+    fs.makeDir(saveFolder)
+end
+
+-- Ouverture du modem
+rednet.open("back") -- Assurez-vous que le modem est connecté à l'arrière
+
+print("En attente d'une connexion ou d'un fichier...")
+
 while true do
     -- Réception de messages
     local senderID, message = rednet.receive()
@@ -6,7 +19,6 @@ while true do
         -- Répondre au ping
         rednet.send(senderID, "pong")
     elseif message.action == "start" then
-        -- Gestion normale des fichiers (comme précédemment)
         local fileName = message.fileName
         print("Préparation pour recevoir : " .. fileName)
 
