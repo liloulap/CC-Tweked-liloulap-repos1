@@ -1,41 +1,53 @@
--- Dossier où sauvegarder les fichiers reçus
-local saveFolder = "Téléchargements"
-
--- Création du dossier si nécessaire
-if not fs.exists(saveFolder) then
-    fs.makeDir(saveFolder)
+-- Nom du fichier à envoyer
+local function getFileName()
+    print("Entrez le nom du fichier à envoyer :")
+    return read()
 end
 
--- Ouverture du modem
-rednet.open("back") -- Assurez-vous que le modem est branché à l'arrière
+-- Lecture du contenu du fichier
+local function readFile(fileName)
+    if not fs.exists(fileName) then
+        print("Fichier non trouvé : " .. fileName)
+        return nil
+    end
+    local file = fs.open(fileName, "r")
+    local content = file.readAll()
+    file.close()
+    return content
+end
 
-print("En attente d'un fichier...")
+-- Envoi du fichier via rednet
+local function sendFile(fileName, content)
+    print("Envoi du fichier '" .. fileName .. "'...")
+    local modem = peripheral.find("modem")
+    if not modem then
+        print("Aucun modem détecté. Connectez un modem et réessayez.")
+        return false
+    end
 
-while true do
-    -- Réception des métadonnées
-    local senderID, message = rednet.receive()
+    rednet.open(peripheral.getName(modem)) -- Ouvre rednet sur le modem trouvé
 
-    if message.action == "start" then
-        local fileName = message.fileName
-        print("Préparation pour recevoir : " .. fileName)
+    local senderId = os.getComputerID()
+    rednet.broadcast({
+        type = "file_transfer",
+        fileName = fileName,
+        content = content
+    }, "file_transfer")
 
-        -- Confirmation de réception
-        rednet.send(senderID, "ready")
+    print("Fichier envoyé à tous les ordinateurs connectés.")
+    rednet.close()
+    return true
+end
 
-        -- Réception du contenu
-        senderID, message = rednet.receive()
-        if message.action == "data" then
-            local content = message.content
-
-            -- Sauvegarde du fichier
-            local file = fs.open(saveFolder .. "/" .. fileName, "w")
-            file.write(content)
-            file.close()
-
-            print("Fichier reçu et sauvegardé dans " .. saveFolder .. "/" .. fileName)
-
-            -- Confirmation finale
-            rednet.send(senderID, "done")
-        end
+-- Programme principal
+local function main()
+    local fileName = getFileName()
+    local content = readFile(fileName)
+    if content then
+        sendFile(fileName, content)
+    else
+        print("Erreur : Impossible de lire le fichier.")
     end
 end
+
+main()
