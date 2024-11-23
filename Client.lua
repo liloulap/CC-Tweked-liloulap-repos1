@@ -7,30 +7,30 @@ if not fs.exists(saveFolder) then
 end
 
 -- Ouverture du modem
-rednet.open("back") -- Assurez-vous que le modem est connecté à l'arrière
+rednet.open("back") -- Assurez-vous que le modem est connecté
 
 print("En attente d'une connexion ou d'un fichier...")
 
 while true do
-    -- Réception de messages
+    -- Réception des messages
     local senderID, message = rednet.receive()
 
     if message.action == "ping" then
-        -- Répondre au ping
+        -- Réponse au ping
         rednet.send(senderID, "pong")
     elseif message.action == "start" then
         local fileName = message.fileName
         print("Préparation pour recevoir : " .. fileName)
 
-        -- Confirmation de réception
+        -- Confirmation de réception des métadonnées
         rednet.send(senderID, "ready")
 
-        -- Réception du contenu
+        -- Réception des données
         senderID, message = rednet.receive()
         if message.action == "data" then
             local content = message.content
 
-            -- Sauvegarde du fichier
+            -- Sauvegarde du fichier reçu
             local file = fs.open(saveFolder .. "/" .. fileName, "w")
             file.write(content)
             file.close()
