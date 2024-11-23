@@ -1,53 +1,32 @@
--- Nom du fichier à envoyer
-local function getFileName()
-    print("Entrez le nom du fichier à envoyer :")
-    return read()
-end
+while true do
+    -- Réception de messages
+    local senderID, message = rednet.receive()
 
--- Lecture du contenu du fichier
-local function readFile(fileName)
-    if not fs.exists(fileName) then
-        print("Fichier non trouvé : " .. fileName)
-        return nil
-    end
-    local file = fs.open(fileName, "r")
-    local content = file.readAll()
-    file.close()
-    return content
-end
+    if message.action == "ping" then
+        -- Répondre au ping
+        rednet.send(senderID, "pong")
+    elseif message.action == "start" then
+        -- Gestion normale des fichiers (comme précédemment)
+        local fileName = message.fileName
+        print("Préparation pour recevoir : " .. fileName)
 
--- Envoi du fichier via rednet
-local function sendFile(fileName, content)
-    print("Envoi du fichier '" .. fileName .. "'...")
-    local modem = peripheral.find("modem")
-    if not modem then
-        print("Aucun modem détecté. Connectez un modem et réessayez.")
-        return false
-    end
+        -- Confirmation de réception
+        rednet.send(senderID, "ready")
 
-    rednet.open(peripheral.getName(modem)) -- Ouvre rednet sur le modem trouvé
+        -- Réception du contenu
+        senderID, message = rednet.receive()
+        if message.action == "data" then
+            local content = message.content
 
-    local senderId = os.getComputerID()
-    rednet.broadcast({
-        type = "file_transfer",
-        fileName = fileName,
-        content = content
-    }, "file_transfer")
+            -- Sauvegarde du fichier
+            local file = fs.open(saveFolder .. "/" .. fileName, "w")
+            file.write(content)
+            file.close()
 
-    print("Fichier envoyé à tous les ordinateurs connectés.")
-    rednet.close()
-    return true
-end
+            print("Fichier reçu et sauvegardé dans " .. saveFolder .. "/" .. fileName)
 
--- Programme principal
-local function main()
-    local fileName = getFileName()
-    local content = readFile(fileName)
-    if content then
-        sendFile(fileName, content)
-    else
-        print("Erreur : Impossible de lire le fichier.")
+            -- Confirmation finale
+            rednet.send(senderID, "done")
+        end
     end
 end
-
-main()
