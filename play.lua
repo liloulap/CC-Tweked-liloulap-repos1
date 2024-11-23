@@ -1,5 +1,5 @@
 -- Nom du fichier audio (assurez-vous qu'il est présent dans le même dossier que ce script)
-local audioFile = "Aron Smith-Dancin Speed Up🩷🫶🏼.dfpwm"
+local audioFile = "Dancin.dfpwm"
 
 -- Vérifie si le fichier audio existe
 if not fs.exists(audioFile) then
