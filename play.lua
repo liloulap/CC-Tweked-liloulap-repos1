@@ -1,10 +1,17 @@
--- Nom du fichier audio (assurez-vous qu'il est présent dans le même dossier que ce script)
-local audioFile = "Dancin.dfpwm"
+-- URL du fichier DFPWM
+local audioURL = "https://github.com/liloulap/CC-Tweked-liloulap-repos1/raw/refs/heads/main/Dancin.dfpwm"
+local audioFile = "Dancin.dfpwm" -- Nom du fichier local
 
--- Vérifie si le fichier audio existe
+-- Télécharge le fichier audio s'il n'est pas déjà présent
 if not fs.exists(audioFile) then
-    print("Fichier audio introuvable : " .. audioFile)
-    return
+    print("Téléchargement du fichier audio...")
+    local ok, err = pcall(function()
+        shell.run("wget", audioURL, audioFile)
+    end)
+    if not ok then
+        print("Échec du téléchargement : " .. (err or "Erreur inconnue"))
+        return
+    end
 end
 
 -- Charge le fichier audio
